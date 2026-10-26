@@ -1,446 +1,407 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <base target="_top">
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AVI 3.0 - Intelcia</title>
+  <meta charset="UTF-8">
+  <title>AVI CX - Proyecto SENA AI</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
-  <script src="https://www.gstatic.com/dialogflow-console/fast/df-messenger/prod/v1/df-messenger.js"></script>
-
+  <!-- Estilos Integrados (CSS3 con Variables de Tema Claro/Oscuro) -->
   <style>
-    :root { --intelcia-orange: #F26631; --intelcia-pink: #DF3A64; --intelcia-purple: #79348B; --intelcia-gradient: linear-gradient(90deg, var(--intelcia-orange), var(--intelcia-pink), var(--intelcia-purple)); --bg-dark: #131314; --bg-surface: #1e1f20; --bg-surface-hover: #2a2b2f; --text-main: #e3e3e3; --text-muted: #c4c7c5; --border-color: #444746; --modal-z: 2200; }
-    body.light-mode { --bg-dark: #f0f2f5; --bg-surface: #ffffff; --bg-surface-hover: #e4e6e9; --text-main: #1c1e21; --text-muted: #65676b; --border-color: #ced0d4; }
-    * { box-sizing: border-box; }
-    body { margin: 0; font-family: 'Open Sans', Arial, sans-serif; color: var(--text-main); background-color: var(--bg-dark); display: flex; height: 100vh; overflow: hidden; transition: background-color 0.3s ease, color 0.3s ease; }
+    :root {
+      --bg-primary: #f8f9fa;
+      --bg-secondary: #ffffff;
+      --text-primary: #212529;
+      --text-secondary: #6c757d;
+      --accent-color: #39a900; /* Verde Institucional SENA */
+      --accent-hover: #2e8800;
+      --border-color: #e9ecef;
+      --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      --panel-width: 320px;
+    }
 
-    .sidebar { width: 68px; background-color: var(--bg-surface); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; align-items: center; padding: 24px 0; z-index: 100; transition: background-color 0.3s ease, border-color 0.3s ease; }
-    .sidebar-btn { width: 44px; height: 44px; border-radius: 50%; background: transparent; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; margin-bottom: 12px; color: var(--text-muted); }
-    .sidebar-btn:hover { background-color: var(--bg-surface-hover); color: var(--text-main); }
-    .sidebar-btn svg { width: 22px; height: 22px; fill: currentColor; transition: transform 0.3s ease; }
-    .icon-report { width: 20px; height: 20px; display: flex; align-items: flex-end; justify-content: space-between; }
-    .icon-report .bar { width: 5px; background-color: var(--text-muted); border-radius: 2px 2px 0 0; transition: background-color 0.3s; }
-    .icon-report .bar:nth-child(1) { height: 40%; } .icon-report .bar:nth-child(2) { height: 70%; } .icon-report .bar:nth-child(3) { height: 100%; }
-    .sidebar-btn:hover .icon-report .bar { background-color: var(--intelcia-pink); }
-    .sidebar-clock { font-size: 13px; font-weight: 700; font-family: 'Courier New', Courier, monospace; color: var(--text-main); letter-spacing: -0.5px; }
+    body.dark-mode {
+      --bg-primary: #121212;
+      --bg-secondary: #1e1e1e;
+      --text-primary: #f8f9fa;
+      --text-secondary: #adb5bd;
+      --border-color: #2d2d2d;
+      --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
 
-    .main-view { flex: 1; position: relative; display: flex; flex-direction: column; align-items: center; }
-    .chat-history-container { width: 100%; max-width: 860px; flex: 1; overflow-y: auto; padding: 40px 20px 120px 20px; display: flex; flex-direction: column; gap: 24px; scroll-behavior: smooth; }
-    .chat-history-container::-webkit-scrollbar { width: 6px; } .chat-history-container::-webkit-scrollbar-track { background: transparent; } .chat-history-container::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 10px; }
-    .message { max-width: 85%; display: flex; flex-direction: column; animation: msgFadeIn 0.3s ease forwards; }
-    @keyframes msgFadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-    .user-message { align-self: flex-end; background-color: var(--bg-surface-hover); padding: 12px 18px; border-radius: 20px 20px 4px 20px; color: var(--text-main); font-size: 1rem; line-height: 1.4; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-    .bot-message { align-self: flex-start; color: var(--text-main); }
-    .bot-label { font-size: 0.75rem; font-weight: 700; background: var(--intelcia-gradient); -webkit-background-clip: text; color: transparent; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px; display: inline-block; }
-    .bot-message .msg-text { background: transparent; font-size: 1rem; line-height: 1.6; }
-    .chips-container { display: flex; flex-wrap: wrap; gap: 12px; margin-top: -10px; align-self: flex-start; animation: msgFadeIn 0.4s ease forwards; }
-    .chip-btn { background-color: var(--bg-surface); border: 1px solid var(--border-color); color: var(--text-main); padding: 10px 20px; border-radius: 24px; font-size: 1rem; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; gap: 8px; }
-    .chip-btn:hover { background-color: var(--bg-surface-hover); border-color: var(--intelcia-pink); transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
-    
-    .greeting-container { position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%); text-align: center; width: 100%; z-index: 1; transition: opacity 0.4s ease; }
-    .greeting { font-size: clamp(1.8rem, 3vw, 2.5rem); font-weight: 400; letter-spacing: -0.02em; line-height: 1.3; }
-    .gradient-text { background: var(--intelcia-gradient); -webkit-background-clip: text; color: transparent; font-weight: 700; }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    }
 
-    .gemini-input-container { position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%); width: 100%; max-width: 820px; padding: 0 20px; z-index: 20; }
-    .gemini-input-bar { position: relative; background-color: var(--bg-surface); border-radius: 32px; display: flex; align-items: center; padding: 6px 12px; border: 1px solid var(--border-color); transition: 0.3s ease; }
-    .gemini-input-bar::before { content: ""; position: absolute; inset: -2px; background: var(--intelcia-gradient); border-radius: 34px; z-index: -1; filter: blur(8px); opacity: 0.4; transition: opacity 0.3s ease, filter 0.3s ease; }
-    .gemini-input-bar:focus-within { background-color: var(--bg-surface); border-color: transparent; } .gemini-input-bar:focus-within::before { opacity: 0.85; filter: blur(12px); }
-    .icon-btn { background: transparent; border: none; color: var(--text-muted); width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; }
-    .icon-btn:hover { background-color: rgba(121, 52, 139, 0.1); color: var(--intelcia-pink); } .icon-btn svg { width: 22px; height: 22px; fill: currentColor; } .mic-btn.active { color: var(--intelcia-pink); background-color: rgba(223, 58, 100, 0.15); }
-    .input-wrapper { flex: 1; display: flex; align-items: center; gap: 12px; padding: 0 8px; } .input-wrapper svg { width: 18px; height: 18px; fill: var(--text-muted); } .input-wrapper input { width: 100%; background: transparent; border: none; color: var(--text-main); font-size: 1.05rem; outline: none; font-family: 'Open Sans', sans-serif; } .input-wrapper input::placeholder { color: var(--text-muted); }
-    .hidden-engine { position: fixed; top: 0; left: 0; width: 1px; height: 1px; opacity: 0; z-index: -100; pointer-events: none; overflow: hidden; }
+    body {
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      display: flex;
+      transition: background-color 0.3s, color 0.3s;
+    }
 
-    /* MODALES Y VENTANAS FLOTANTES */
-    .report-modal { position: fixed; inset: 0; z-index: 2100; display: none; align-items: center; justify-content: center; padding: 18px; } .report-modal.open { display: flex; }
-    .report-backdrop { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(5px); }
-    .report-panel { position: relative; width: min(400px, 100%); border-radius: 20px; background-color: var(--bg-surface); border: 1px solid var(--border-color); box-shadow: 0 20px 40px rgba(0,0,0,0.6); padding: 24px; transition: background-color 0.3s; }
-    .report-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
-    .report-head h2 { margin: 0; font-size: 1.2rem; font-weight: 600; color: var(--text-main); }
-    .report-close { background: transparent; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.5rem; transition: color 0.2s; } .report-close:hover { color: var(--intelcia-pink); }
-    .report-field input { width: 100%; height: 48px; border-radius: 10px; border: 1px solid var(--border-color); background-color: var(--bg-dark); color: var(--text-main); padding: 0 16px; margin-bottom: 12px; outline: none; transition: border-color 0.3s; }
-    .report-field input:focus { border-color: var(--intelcia-purple); }
-    .report-actions { display: flex; gap: 12px; margin-top: 8px; }
-    .report-btn { flex: 1; border: none; border-radius: 20px; height: 44px; cursor: pointer; font-weight: 600; transition: transform 0.2s, box-shadow 0.2s; }
-    .report-btn:hover { transform: scale(1.02); }
-    .report-btn.primary { background: var(--intelcia-gradient); color: white; }
-    .report-btn.secondary { background: transparent; color: var(--text-main); border: 1px solid var(--border-color); }
-    .report-status { margin-top: 12px; font-size: 0.9rem; display: none; text-align: center; }
-    .report-status.show { display: block; color: var(--intelcia-pink); }
-    .report-open-link { display: none; margin-top: 12px; text-align: center; color: var(--intelcia-orange); font-weight: bold; text-decoration: none; }
-    .report-open-link:hover { text-decoration: underline; }
-    .report-open-link.show { display: block; }
+    /* Barra Lateral FLotante de Herramientas (Prototipo UI) */
+    .sidebar-container {
+      position: fixed;
+      right: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      background: var(--bg-secondary);
+      padding: 12px 8px;
+      border-radius: 30px;
+      box-shadow: var(--card-shadow);
+      border: 1px solid var(--border-color);
+      z-index: 1000;
+    }
 
-    .time-modal { justify-content: flex-start; padding-left: 85px; } .time-panel { text-align: center; width: 320px; transform-origin: left center; animation: slideScaleIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; } @keyframes slideScaleIn { from { opacity: 0; transform: scale(0.8) translateX(-20px); } to { opacity: 1; transform: scale(1) translateX(0); } } .time-display-large { font-size: 3.5rem; font-weight: 700; background: var(--intelcia-gradient); -webkit-background-clip: text; color: transparent; margin: 10px 0 5px 0; line-height: 1; } .time-country { font-size: 1.1rem; color: var(--text-muted); margin-bottom: 24px; font-weight: 600; } .timezone-select { width: 100%; padding: 14px; border-radius: 12px; border: 1px solid var(--border-color); background-color: var(--bg-dark); color: var(--text-main); font-size: 1rem; outline: none; cursor: pointer; appearance: none; } .timezone-select option { background-color: var(--bg-surface); color: var(--text-main); }
+    .sidebar-btn {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      border: none;
+      background: transparent;
+      color: var(--text-primary);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background-color 0.2s, transform 0.1s;
+    }
 
-    .floating-window { position: absolute; background-color: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.5); z-index: var(--modal-z); display: none; flex-direction: column; overflow: hidden; transition: background-color 0.3s, border-color 0.3s; }
-    .floating-window:focus { outline: none; box-shadow: 0 15px 35px rgba(0,0,0,0.5), 0 0 0 2px var(--intelcia-purple); }
-    .floating-window.open { display: flex; animation: slideScaleIn 0.2s ease forwards; }
-    .drag-header { padding: 12px 16px; background-color: var(--bg-dark); cursor: grab; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); transition: background-color 0.3s; }
-    .drag-header:active { cursor: grabbing; } .drag-header h2 { margin: 0; font-size: 1rem; font-weight: 600; color: var(--text-main); user-select: none; display: flex; align-items: center; gap: 8px; }
-    
-    .calc-modal { top: 20%; left: 90px; width: 300px; }
-    .calc-display { font-size: 2.5rem; text-align: right; padding: 24px 20px; color: var(--text-main); word-break: break-all; font-family: 'Courier New', Courier, monospace; font-weight: 700; min-height: 90px; display: flex; align-items: flex-end; justify-content: flex-end; }
-    .calc-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; padding: 0 20px 24px 20px; }
-    .calc-btn { background-color: var(--bg-dark); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 12px; font-size: 1.3rem; height: 54px; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; justify-content: center; user-select: none; }
-    .calc-btn:hover { background-color: var(--bg-surface-hover); transform: translateY(-2px); } .calc-btn:active { transform: translateY(0); } .calc-btn.op { color: var(--intelcia-orange); font-weight: bold; background-color: rgba(242, 102, 49, 0.05); } .calc-btn.clear { color: var(--intelcia-pink); font-weight: bold; } .calc-btn.eq { background: var(--intelcia-gradient); color: white; border: none; font-weight: bold; } .calc-btn.wide { grid-column: span 2; }
+    .sidebar-btn:hover {
+      background-color: var(--border-color);
+      transform: scale(1.05);
+    }
 
-    .tool-modal { width: 340px; } .trans-modal { top: 25%; left: 110px; } .spell-modal { top: 35%; left: 130px; }
-    .tool-body { padding: 20px; display: flex; flex-direction: column; gap: 15px; }
-    .tool-body textarea { width: 100%; background: var(--bg-dark); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 12px; padding: 12px; font-family: inherit; font-size: 1rem; resize: none; outline: none; transition: border 0.3s; }
-    .tool-body textarea:focus { border-color: var(--intelcia-purple); }
-    .tool-controls { display: flex; justify-content: space-between; align-items: center; }
-    .tool-status { font-size: 0.85rem; color: var(--text-muted); font-weight: 600; }
-    .tool-submit { background: var(--intelcia-gradient); color: white; border: none; width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; }
-    .tool-submit:hover { transform: scale(1.05); box-shadow: 0 4px 10px rgba(0,0,0,0.2); } .tool-submit svg { width: 20px; height: 20px; fill: white; margin-left: 2px; }
-    .tool-output-box { border-top: 1px dashed var(--border-color); padding-top: 15px; } .tool-output-box textarea { background: transparent; border: none; padding: 0; color: var(--intelcia-orange); font-weight: 600; }
+    .sidebar-btn.active {
+      background-color: var(--accent-color);
+      color: #ffffff;
+    }
 
-    /* --- ESTILOS MEJORADOS: CONTACTOS Y APPS --- */
-    .contacts-modal { top: 15%; left: 150px; width: 380px; max-height: 80vh; }
-    .contacts-filter-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
-    .contacts-search, .contacts-select { width: 100%; background: var(--bg-dark); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 10px; padding: 10px 12px; font-family: inherit; font-size: 0.95rem; outline: none; transition: border 0.3s; }
-    .contacts-search:focus, .contacts-select:focus { border-color: var(--intelcia-purple); }
-    .contacts-select { cursor: pointer; appearance: none; }
-    .contacts-select option { background-color: var(--bg-surface); color: var(--text-main); }
-    
-    /* MODIFICACIÓN AQUÍ: padding-bottom añadido para evitar que la última tarjeta se corte */
-    .contacts-list { overflow-y: auto; max-height: 400px; display: flex; flex-direction: column; gap: 10px; padding-right: 5px; padding-bottom: 15px; }
-    .contacts-list::-webkit-scrollbar { width: 4px; } .contacts-list::-webkit-scrollbar-track { background: transparent; } .contacts-list::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 10px; }
-    
-    .contact-card { background: var(--bg-dark); border: 1px solid var(--border-color); border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 4px; transition: border-color 0.2s; }
-    .contact-card:hover { border-color: var(--intelcia-orange); }
-    .contact-card .c-name { font-weight: 700; color: var(--intelcia-orange); font-size: 1rem; }
-    .contact-card .c-email { font-size: 0.85rem; color: var(--text-muted); user-select: all; }
-    .contact-card .c-role { font-size: 0.75rem; background: var(--bg-surface-hover); padding: 4px 8px; border-radius: 12px; align-self: flex-start; color: var(--text-main); margin-top: 4px; font-weight: 600; letter-spacing: 0.5px; }
-    
-    .error-msg { color: var(--intelcia-pink); font-size: 0.9rem; text-align: center; padding: 15px; font-weight: 600; }
+    .sidebar-btn svg {
+      fill: currentColor;
+    }
 
-    .apps-modal { top: 10%; left: 170px; width: 450px; }
-    /* MODIFICACIÓN AQUÍ: padding-bottom añadido para evitar recortes al final */
-    .apps-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; max-height: 450px; overflow-y: auto; padding-right: 5px; padding-bottom: 15px; }
-    .apps-grid::-webkit-scrollbar { width: 4px; } .apps-grid::-webkit-scrollbar-track { background: transparent; } .apps-grid::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 10px; }
-    .app-card { background: var(--bg-dark); border: 1px solid var(--border-color); border-radius: 12px; padding: 16px 12px; text-align: center; cursor: pointer; text-decoration: none; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: all 0.2s; min-height: 90px; }
-    .app-card:hover { transform: translateY(-3px); border-color: var(--intelcia-pink); box-shadow: 0 5px 15px rgba(223, 58, 100, 0.15); }
-    .app-card span { color: var(--text-main); font-weight: 600; font-size: 0.9rem; line-height: 1.3; }
+    /* Paneles Desplegables de Herramientas */
+    .tool-panel {
+      position: fixed;
+      right: 76px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: var(--panel-width);
+      background: var(--bg-secondary);
+      border-radius: 16px;
+      box-shadow: var(--card-shadow);
+      border: 1px solid var(--border-color);
+      padding: 20px;
+      display: none;
+      flex-direction: column;
+      gap: 14px;
+      z-index: 999;
+    }
+
+    .tool-panel.open {
+      display: flex;
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 8px;
+    }
+
+    .panel-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--accent-color);
+    }
+
+    .close-btn {
+      background: none;
+      border: none;
+      font-size: 1.2rem;
+      cursor: pointer;
+      color: var(--text-secondary);
+    }
+
+    /* Estilos de Controles e Insumos */
+    textarea, input[type="text"] {
+      width: 100%;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      outline: none;
+    }
+
+    .btn-action {
+      background: var(--accent-color);
+      color: white;
+      border: none;
+      padding: 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: background 0.2s;
+    }
+
+    .btn-action:hover {
+      background: var(--accent-hover);
+    }
+
+    .result-box {
+      padding: 10px;
+      border-radius: 8px;
+      background: var(--bg-primary);
+      min-height: 60px;
+      font-size: 0.9rem;
+      word-break: break-word;
+    }
+
+    /* Calculadora Grid Layout */
+    .calc-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+
+    .calc-btn {
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      font-size: 1.1rem;
+      cursor: pointer;
+    }
+
+    /* Lista de Contactos */
+    .contacts-list {
+      max-height: 240px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .contact-card {
+      padding: 8px 12px;
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+      background: var(--bg-primary);
+    }
+
+    .contact-name { font-weight: 600; font-size: 0.9rem; }
+    .contact-email { font-size: 0.8rem; color: var(--text-secondary); }
   </style>
 </head>
+<body>
 
-<body class="light-mode">
-  <aside class="sidebar">
-    <button class="sidebar-btn" id="openTimeBtn" title="Configurar Zona Horaria"><div id="sidebarClock" class="sidebar-clock">--:--</div></button>
-    <button class="sidebar-btn" id="openReportBtn" title="Abrir Reportes"><div class="icon-report"><div class="bar"></div><div class="bar"></div><div class="bar"></div></div></button>
-    
-    <button class="sidebar-btn theme-btn" id="themeToggleBtn" title="Cambiar Tema" onclick="toggleTheme()">
-      <svg id="themeIcon" viewBox="0 0 24 24"><path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-.46-.04-.92-.1-1.36-.98 1.37-2.58 2.26-4.4 2.26-3.03 0-5.5-2.47-5.5-5.5 0-1.82.89-3.42 2.26-4.4-.44-.06-.9-.1-1.36-.1z"/></svg>
+  <!-- BARRA LATERAL FLOTANTE (BARRA DE HERRAMIENTAS AVI CX) -->
+  <div class="sidebar-container">
+    <button class="sidebar-btn" id="themeToggleBtn" title="Cambiar Tema" onclick="toggleTheme()">
+      <svg viewBox="0 0 24 24" style="width: 20px; height: 20px;"><path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-.46-.04-.92-.1-1.36-.98 1.37-2.58 2.26-4.4 2.26-3.03 0-5.5-2.47-5.5-5.5 0-1.82.89-3.42 2.26-4.4-.44-.06-.9-.1-1.36-.1z"/></svg>
     </button>
 
-    <button class="sidebar-btn" id="openCalcBtn" title="Abrir Calculadora"><svg viewBox="0 0 24 24" style="width: 20px; height: 20px;"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-6 16h-2v-2h2v2zm0-4h-2v-2h2v2zm0-4h-2V9h2v2zm4 8h-2v-2h2v2zm0-4h-2v-2h2v2zm0-4h-2V9h2v2zM7 19H5v-2h2v2zm0-4H5v-2h2v2zm0-4H5V9h2v2zm12-4H5V5h14v2z"/></svg></button>
-    <button class="sidebar-btn" id="openTransBtn" title="Abrir Traductor"><svg viewBox="0 0 24 24" style="width: 22px; height: 22px;"><path d="M12.87 15.07l-2.54-2.51.03-.03c1.74-1.94 2.98-4.17 3.71-6.53H17V4h-7V2H8v2H1v2h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11.76-2.04zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2l-4.5-12zm-2.62 7l1.62-4.33L19.12 17h-3.24z"/></svg></button>
-    <button class="sidebar-btn" id="openSpellBtn" title="Ortografía (ES)"><svg viewBox="0 0 24 24" style="width: 22px; height: 22px;"><path d="M21.59 11.59l-1.41-1.41L16 14.34l-2.18-2.18-1.41 1.41L16 17.17l5.59-5.58zM11.66 4h-2.31l-5.5 14h2.2l1.34-3.66h5.21l1.34 3.66h2.2l-5.48-14zm-3.5 8.44l2.35-6.42 2.35 6.42h-4.7z"/></svg></button>
-    <button class="sidebar-btn" id="openContactsBtn" title="Directorio de Contactos">
+    <button class="sidebar-btn" title="Calculadora" onclick="togglePanel('calcPanel')">
+      <svg viewBox="0 0 24 24" style="width: 20px; height: 20px;"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-6 16h-2v-2h2v2zm0-4h-2v-2h2v2zm0-4h-2V9h2v2zm4 8h-2v-2h2v2zm0-4h-2v-2h2v2zm0-4h-2V9h2v2zM7 19H5v-2h2v2zm0-4H5v-2h2v2zm0-4H5V9h2v2zm12-4H5V5h14v2z"/></svg>
+    </button>
+
+    <button class="sidebar-btn" title="Traductor" onclick="togglePanel('transPanel')">
+      <svg viewBox="0 0 24 24" style="width: 20px; height: 20px;"><path d="M12.87 15.07l-2.54-2.51.03-.03c1.74-1.94 2.98-4.17 3.71-6.53H17V4h-7V2H8v2H1v2h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11.76-2.04zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2l-4.5-12zm-2.62 7l1.62-4.33L19.12 17h-3.24z"/></svg>
+    </button>
+
+    <button class="sidebar-btn" title="Ortografía" onclick="togglePanel('spellPanel')">
+      <svg viewBox="0 0 24 24" style="width: 20px; height: 20px;"><path d="M21.59 11.59l-1.41-1.41L16 14.34l-2.18-2.18-1.41 1.41L16 17.17l5.59-5.58zM11.66 4h-2.31l-5.5 14h2.2l1.34-3.66h5.21l1.34 3.66h2.2l-5.48-14zm-3.5 8.44l2.35-6.42 2.35 6.42h-4.7z"/></svg>
+    </button>
+
+    <button class="sidebar-btn" title="Directorio Contactos" onclick="togglePanel('contactsPanel'); loadContacts();">
       <svg viewBox="0 0 24 24" style="width: 20px; height: 20px;"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>
     </button>
-    <button class="sidebar-btn" id="openAppsBtn" title="Aplicativos Rápidos">
-      <svg viewBox="0 0 24 24" style="width: 20px; height: 20px;"><path d="M4 8h4V4H4v4zm6 12h4v-4h-4v4zm-6 0h4v-4H4v4zm0-6h4v-4H4v4zm6 0h4v-4h-4v4zm6-10v4h4V4h-4zm-6 4h4V4h-4v4zm6 6h4v-4h-4v4zm0 6h4v-4h-4v4z"/></svg>
-    </button>
-  </aside>
-
-  <main class="main-view">
-    <div id="welcome-screen" class="greeting-container">
-      <h1 class="greeting">
-        Hola soy <span class="gradient-text">AVI</span><br>tu Asistente Virtual, ¿en qué puedo ayudarte?
-      </h1>
-    </div>
-    <div id="chatHistory" class="chat-history-container"></div>
-    <div class="gemini-input-container">
-      <div class="gemini-input-bar">
-        <button class="icon-btn" title="Adjuntar"><svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg></button>
-        <div class="input-wrapper"><svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/></svg><input type="text" id="customChatInput" placeholder="Preguntarle a AVI..." autocomplete="off" /></div>
-        <button class="icon-btn mic-btn" id="ttsToggle" title="Activar voz" onclick="toggleVoice()"><svg viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg></button>
-      </div>
-    </div>
-  </main>
-
-  <div class="hidden-engine">
-    <df-messenger 
-      project-id="" 
-      agent-id="" 
-      language-code="es" 
-      session-id="<?= sessionId ?>" 
-      user-id="<?= correo ?>"
-      max-query-length="-1" 
-      query-params='<?!= JSON.stringify({ parameters: { correo: correo, user_email: correo }, payload: { userId: correo, userEmail: correo } }) ?>'>
-    </df-messenger>
   </div>
 
-  <div class="report-modal" id="reportModal" aria-hidden="true">
-    <div class="report-backdrop" data-close="true"></div>
-    <div class="report-panel">
-      <div class="report-head"><h2>Acceso a reporte</h2><button class="report-close" id="closeReportBtn">×</button></div>
-      <form id="reportLoginForm" autocomplete="off">
-        <div class="report-field"><input id="reportUser" type="text" placeholder="Usuario" required /></div>
-        <div class="report-field"><input id="reportPass" type="password" placeholder="Contraseña" required /></div>
-        <div class="report-actions"><button class="report-btn secondary" id="reportClearBtn" type="button">Limpiar</button><button class="report-btn primary" id="reportSubmitBtn" type="submit">Ingresar</button></div>
-      </form>
-      <div class="report-status" id="reportStatus"></div><a class="report-open-link" id="reportOpenLink" href="#" target="_blank">Abrir reporte</a>
+  <!-- PANEL 1: CALCULADORA RÁPIDA -->
+  <div class="tool-panel" id="calcPanel">
+    <div class="panel-header">
+      <span class="panel-title">Calculadora</span>
+      <button class="close-btn" onclick="closeAllPanels()">&times;</button>
     </div>
-  </div>
-  
-  <div class="report-modal time-modal" id="timeModal" aria-hidden="true"><div class="report-backdrop" id="timeBackdrop"></div><div class="report-panel time-panel"><div class="report-head"><h2>Ajustar Hora</h2><button class="report-close" id="closeTimeBtn">×</button></div><div class="time-display-large" id="modalTimeDisplay">--:--</div><div class="time-country" id="modalCountryDisplay">Colombia</div><select id="timezoneSelect" class="timezone-select"><option value="America/Bogota" data-country="Colombia">🇨🇴 Colombia</option><option value="Europe/Madrid" data-country="España">🇪🇸 España (Península)</option><option value="America/Mexico_City" data-country="México">🇲🇽 México (CDMX)</option><option value="America/Argentina/Buenos_Aires" data-country="Argentina">🇦🇷 Argentina</option><option value="America/Lima" data-country="Perú">🇵🇪 Perú</option><option value="America/Santiago" data-country="Chile">🇨🇱 Chile</option><option value="America/New_York" data-country="Estados Unidos (EST)">🇺🇸 Estados Unidos (Miami/NY)</option></select></div></div>
-
-  <div class="floating-window calc-modal" id="calcModal" tabindex="0">
-    <div class="drag-header" id="calcHeader"><h2>Calculadora</h2><button class="report-close" id="closeCalcBtn">×</button></div>
-    <div class="calc-display" id="calcDisplay">0</div>
+    <input type="text" id="calcDisplay" readonly value="0" style="text-align: right; font-size: 1.2rem;">
     <div class="calc-grid">
-      <button class="calc-btn clear wide" data-action="clear">AC</button><button class="calc-btn op" data-action="op" data-val="del">⌫</button><button class="calc-btn op" data-action="op" data-val="/">÷</button>
-      <button class="calc-btn" data-action="num" data-val="7">7</button><button class="calc-btn" data-action="num" data-val="8">8</button><button class="calc-btn" data-action="num" data-val="9">9</button><button class="calc-btn op" data-action="op" data-val="*">×</button>
-      <button class="calc-btn" data-action="num" data-val="4">4</button><button class="calc-btn" data-action="num" data-val="5">5</button><button class="calc-btn" data-action="num" data-val="6">6</button><button class="calc-btn op" data-action="op" data-val="-">−</button>
-      <button class="calc-btn" data-action="num" data-val="1">1</button><button class="calc-btn" data-action="num" data-val="2">2</button><button class="calc-btn" data-action="num" data-val="3">3</button><button class="calc-btn op" data-action="op" data-val="+">+</button>
-      <button class="calc-btn wide" data-action="num" data-val="0">0</button><button class="calc-btn" data-action="num" data-val=".">.</button><button class="calc-btn eq" data-action="eq">=</button>
+      <button class="calc-btn" onclick="clearCalc()">C</button>
+      <button class="calc-btn" onclick="pressCalc('/')">/</button>
+      <button class="calc-btn" onclick="pressCalc('*')">*</button>
+      <button class="calc-btn" onclick="pressCalc('-')">-</button>
+      <button class="calc-btn" onclick="pressCalc('7')">7</button>
+      <button class="calc-btn" onclick="pressCalc('8')">8</button>
+      <button class="calc-btn" onclick="pressCalc('9')">9</button>
+      <button class="calc-btn" onclick="pressCalc('+')">+</button>
+      <button class="calc-btn" onclick="pressCalc('4')">4</button>
+      <button class="calc-btn" onclick="pressCalc('5')">5</button>
+      <button class="calc-btn" onclick="pressCalc('6')">6</button>
+      <button class="calc-btn" onclick="evalCalc()" style="grid-row: span 2; background: var(--accent-color); color: white;">=</button>
+      <button class="calc-btn" onclick="pressCalc('1')">1</button>
+      <button class="calc-btn" onclick="pressCalc('2')">2</button>
+      <button class="calc-btn" onclick="pressCalc('3')">3</button>
+      <button class="calc-btn" onclick="pressCalc('0')" style="grid-column: span 2;">0</button>
+      <button class="calc-btn" onclick="pressCalc('.')">.</button>
     </div>
   </div>
 
-  <div class="floating-window tool-modal trans-modal" id="transModal" tabindex="0">
-    <div class="drag-header" id="transHeader"><h2><svg viewBox="0 0 24 24" style="width: 18px; fill: currentColor"><path d="M12.87 15.07l-2.54-2.51.03-.03c1.74-1.94 2.98-4.17 3.71-6.53H17V4h-7V2H8v2H1v2h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11.76-2.04zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2l-4.5-12zm-2.62 7l1.62-4.33L19.12 17h-3.24z"/></svg> Traductor</h2><button class="report-close" id="closeTransBtn">×</button></div>
-    <div class="tool-body"><textarea id="transInput" placeholder="Pega el texto aquí... (Enter para traducir)" rows="3"></textarea><div class="tool-controls"><span id="transStatus" class="tool-status">Español ↔ Inglés</span><button id="transSubmitBtn" class="tool-submit" title="Traducir"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button></div><div class="tool-output-box"><textarea id="transOutput" placeholder="Traducción..." rows="4" readonly></textarea></div></div>
+  <!-- PANEL 2: TRADUCTOR BILINGÜE -->
+  <div class="tool-panel" id="transPanel">
+    <div class="panel-header">
+      <span class="panel-title">Traductor</span>
+      <button class="close-btn" onclick="closeAllPanels()">&times;</button>
+    </div>
+    <textarea id="transInput" rows="3" placeholder="Ingresa texto aquí..."></textarea>
+    <button class="btn-action" onclick="runTranslation()">Traducir</button>
+    <div class="result-box" id="transResult">El resultado aparecerá aquí.</div>
   </div>
 
-  <div class="floating-window tool-modal spell-modal" id="spellModal" tabindex="0">
-    <div class="drag-header" id="spellHeader"><h2><svg viewBox="0 0 24 24" style="width: 18px; fill: currentColor"><path d="M21.59 11.59l-1.41-1.41L16 14.34l-2.18-2.18-1.41 1.41L16 17.17l5.59-5.58zM11.66 4h-2.31l-5.5 14h2.2l1.34-3.66h5.21l1.34 3.66h2.2l-5.48-14zm-3.5 8.44l2.35-6.42 2.35 6.42h-4.7z"/></svg> Ortografía (ES)</h2><button class="report-close" id="closeSpellBtn">×</button></div>
-    <div class="tool-body"><textarea id="spellInput" placeholder="Pega el texto a revisar aquí... (Enter para corregir)" rows="3"></textarea><div class="tool-controls"><span id="spellStatus" class="tool-status">Revisión de Español</span><button id="spellSubmitBtn" class="tool-submit" title="Corregir Ortografía"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button></div><div class="tool-output-box"><textarea id="spellOutput" placeholder="Texto corregido..." rows="4" readonly></textarea></div></div>
+  <!-- PANEL 3: CORRECCIÓN ORTOGRÁFICA -->
+  <div class="tool-panel" id="spellPanel">
+    <div class="panel-header">
+      <span class="panel-title">Ortografía (ES)</span>
+      <button class="close-btn" onclick="closeAllPanels()">&times;</button>
+    </div>
+    <textarea id="spellInput" rows="3" placeholder="Escribe un párrafo a revisar..."></textarea>
+    <button class="btn-action" onclick="runSpellCheck()">Verificar</button>
+    <div class="result-box" id="spellResult">El texto corregido aparecerá aquí.</div>
   </div>
 
-  <!-- MODAL DE CONTACTOS -->
-  <div class="floating-window tool-modal contacts-modal" id="contactsModal" tabindex="0">
-    <div class="drag-header" id="contactsHeader">
-      <h2><svg viewBox="0 0 24 24" style="width: 18px; fill: currentColor; margin-right: 5px;"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg> Contactos</h2>
-      <button class="report-close" id="closeContactsBtn">×</button>
+  <!-- PANEL 4: DIRECTORIO DE CONTACTOS -->
+  <div class="tool-panel" id="contactsPanel">
+    <div class="panel-header">
+      <span class="panel-title">Contactos SENA</span>
+      <button class="close-btn" onclick="closeAllPanels()">&times;</button>
     </div>
-    <div class="tool-body">
-      <div class="contacts-filter-group">
-        <input type="text" id="contactsSearch" class="contacts-search" placeholder="Buscar por Nombre o Correo..." autocomplete="off" />
-        <select id="contactsRoleFilter" class="contacts-select">
-          <option value="">Todos los cargos</option>
-        </select>
-      </div>
-      <div id="contactsList" class="contacts-list"></div>
-    </div>
-  </div>
-
-  <!-- MODAL DE APLICATIVOS -->
-  <div class="floating-window tool-modal apps-modal" id="appsModal" tabindex="0">
-    <div class="drag-header" id="appsHeader">
-      <h2><svg viewBox="0 0 24 24" style="width: 18px; fill: currentColor; margin-right: 5px;"><path d="M4 8h4V4H4v4zm6 12h4v-4h-4v4zm-6 0h4v-4H4v4zm0-6h4v-4H4v4zm6 0h4v-4h-4v4zm6-10v4h4V4h-4zm-6 4h4V4h-4v4zm6 6h4v-4h-4v4zm0 6h4v-4h-4v4z"/></svg> Aplicativos</h2>
-      <button class="report-close" id="closeAppsBtn">×</button>
-    </div>
-    <div class="tool-body">
-      <div id="appsGrid" class="apps-grid"></div>
+    <input type="text" id="contactSearch" placeholder="Buscar por nombre o correo..." onkeyup="filterContacts()">
+    <div class="contacts-list" id="contactsContainer">
+      <div style="font-size: 0.85rem; color: var(--text-secondary);">Cargando directorio...</div>
     </div>
   </div>
 
+  <!-- SCRIPTS CLIENTE: LÓGICA INTERACTIVA Y COMUNICACIÓN CON APPS SCRIPT -->
   <script>
-    const AVI_USER_EMAIL = <?= JSON.stringify(correo) ?>;
-    const AVI_SESSION_ID = <?= JSON.stringify(sessionId) ?>;
-    let activeZIndex = 2200;
+    var rawContactsData = [];
 
-    function prepareDfMessengerForRequest() {
-        const df = document.querySelector('df-messenger');
-        if (!df) return null;
-
-        df.setAttribute('session-id', AVI_SESSION_ID);
-        df.setAttribute('user-id', AVI_USER_EMAIL);
-
-        if (typeof df.setQueryParameters === 'function') {
-            df.setQueryParameters({
-                parameters: {
-                    correo: AVI_USER_EMAIL,
-                    user_email: AVI_USER_EMAIL
-                },
-                payload: {
-                    userId: AVI_USER_EMAIL,
-                    userEmail: AVI_USER_EMAIL
-                }
-            });
-        }
-
-        return df;
+    // Alternar Tema Claro / Oscuro
+    function toggleTheme() {
+      document.body.classList.toggle('dark-mode');
     }
 
-    window.addEventListener('df-messenger-loaded', function () {
-        prepareDfMessengerForRequest();
-    });
-    function makeDraggable(modalId, headerId) { const modal = document.getElementById(modalId), header = document.getElementById(headerId); let isDragging = false, startX, startY, initX, initY; modal.addEventListener('mousedown', () => { activeZIndex++; modal.style.zIndex = activeZIndex; modal.focus(); }); header.addEventListener('mousedown', (e) => { isDragging = true; startX = e.clientX; startY = e.clientY; initX = modal.offsetLeft; initY = modal.offsetTop; document.addEventListener('mousemove', onDrag); document.addEventListener('mouseup', stopDrag); }); function onDrag(e) { if (!isDragging) return; e.preventDefault(); modal.style.left = (initX + (e.clientX - startX)) + 'px'; modal.style.top = (initY + (e.clientY - startY)) + 'px'; } function stopDrag() { isDragging = false; document.removeEventListener('mousemove', onDrag); document.removeEventListener('mouseup', stopDrag); } }
-    
-    makeDraggable('calcModal', 'calcHeader'); 
-    makeDraggable('transModal', 'transHeader'); 
-    makeDraggable('spellModal', 'spellHeader');
-    makeDraggable('contactsModal', 'contactsHeader');
-    makeDraggable('appsModal', 'appsHeader');
+    // Control de Paneles Flotantes
+    function togglePanel(panelId) {
+      var target = document.getElementById(panelId);
+      var isOpen = target.classList.contains('open');
+      closeAllPanels();
+      if (!isOpen) {
+        target.classList.add('open');
+      }
+    }
 
-    // ==========================================
-    // CONTACTOS (CON DOBLE FILTRO DINÁMICO)
-    // ==========================================
-    let allContacts = [];
-    const contactsModal = document.getElementById('contactsModal');
-    const contactsList = document.getElementById('contactsList');
-    const contactsSearch = document.getElementById('contactsSearch');
-    const contactsRoleFilter = document.getElementById('contactsRoleFilter');
-    
-    document.getElementById('openContactsBtn').addEventListener('click', () => { 
-        contactsModal.classList.add('open'); 
-        activeZIndex++; contactsModal.style.zIndex = activeZIndex; contactsSearch.focus();
-        if(allContacts.length === 0) loadContacts();
-    });
-    document.getElementById('closeContactsBtn').addEventListener('click', () => contactsModal.classList.remove('open'));
+    function closeAllPanels() {
+      var panels = document.querySelectorAll('.tool-panel');
+      panels.forEach(p => p.classList.remove('open'));
+    }
 
+    // Lógica Calculadora
+    function pressCalc(val) {
+      var disp = document.getElementById('calcDisplay');
+      if (disp.value === '0') disp.value = '';
+      disp.value += val;
+    }
+
+    function clearCalc() {
+      document.getElementById('calcDisplay').value = '0';
+    }
+
+    function evalCalc() {
+      var disp = document.getElementById('calcDisplay');
+      try {
+        disp.value = Function('"use strict"; return (' + disp.value + ')')();
+      } catch (e) {
+        disp.value = 'Error';
+      }
+    }
+
+    // Integración con Servidor: Traductor (CU04)
+    function runTranslation() {
+      var text = document.getElementById('transInput').value;
+      var resBox = document.getElementById('transResult');
+      resBox.innerText = 'Traduciendo...';
+
+      google.script.run
+        .withSuccessHandler(function(res) {
+          resBox.innerText = res.text + '\n\n[' + res.label + ']';
+        })
+        .withFailureHandler(function(err) {
+          resBox.innerText = 'Error: ' + err.message;
+        })
+        .translateText(text);
+    }
+
+    // Integración con Servidor: Corrector Ortográfico (CU05)
+    function runSpellCheck() {
+      var text = document.getElementById('spellInput').value;
+      var resBox = document.getElementById('spellResult');
+      resBox.innerText = 'Verificando...';
+
+      google.script.run
+        .withSuccessHandler(function(res) {
+          resBox.innerText = res.text + '\n\n[' + res.label + ']';
+        })
+        .withFailureHandler(function(err) {
+          resBox.innerText = 'Error: ' + err.message;
+        })
+        .correctSpelling(text);
+    }
+
+    // Integración con Servidor: Directorio de Contactos (CU03)
     function loadContacts() {
-        contactsList.innerHTML = '<div style="text-align:center; padding: 20px; color: var(--text-muted);">Conectando con Google Sheets...</div>';
-        if (typeof google !== 'undefined' && google.script && google.script.run) {
-            google.script.run.withSuccessHandler(res => {
-                allContacts = res;
-                populateRolesDropdown(allContacts);
-                renderContacts(allContacts);
-            }).withFailureHandler(err => {
-                contactsList.innerHTML = `<div class="error-msg">${err.message || 'Error al conectar con la base de datos.'}</div>`;
-            }).getContacts();
-        } else {
-            contactsList.innerHTML = '<div class="error-msg">Entorno Google Apps Script no detectado.</div>';
-        }
+      var container = document.getElementById('contactsContainer');
+      google.script.run
+        .withSuccessHandler(function(data) {
+          rawContactsData = data;
+          renderContacts(data);
+        })
+        .withFailureHandler(function(err) {
+          container.innerHTML = '<div style="color:red; font-size:0.8rem;">Error: ' + err.message + '</div>';
+        })
+        .getContacts();
     }
 
-    function populateRolesDropdown(data) {
-        const uniqueRoles = [...new Set(data.map(c => c.cargo))].filter(Boolean).sort();
-        contactsRoleFilter.innerHTML = '<option value="">Todos los cargos</option>';
-        uniqueRoles.forEach(role => {
-            contactsRoleFilter.innerHTML += `<option value="${role}">${role}</option>`;
-        });
+    function renderContacts(list) {
+      var container = document.getElementById('contactsContainer');
+      if (!list || list.length === 0) {
+        container.innerHTML = '<div style="font-size:0.85rem;">No se encontraron contactos.</div>';
+        return;
+      }
+      container.innerHTML = list.map(c => `
+        <div class="contact-card">
+          <div class="contact-name">${c.nombre}</div>
+          <div class="contact-email">${c.correo}</div>
+        </div>
+      `).join('');
     }
 
-    function renderContacts(data) {
-        contactsList.innerHTML = '';
-        if(data.length === 0) { 
-            contactsList.innerHTML = '<div style="text-align:center; color: var(--text-muted); padding:10px;">No se encontraron resultados.</div>'; 
-            return; 
-        }
-        data.forEach(c => {
-            contactsList.innerHTML += `
-            <div class="contact-card">
-                <span class="c-name">${c.nombre}</span>
-                <span class="c-email">${c.correo}</span>
-                <span class="c-role">${c.cargo}</span>
-            </div>`;
-        });
+    function filterContacts() {
+      var q = document.getElementById('contactSearch').value.toLowerCase();
+      var filtered = rawContactsData.filter(c => 
+        c.nombre.toLowerCase().includes(q) || c.correo.toLowerCase().includes(q)
+      );
+      renderContacts(filtered);
     }
-
-    function applyContactsFilter() {
-        const textTerm = contactsSearch.value.toLowerCase();
-        const roleTerm = contactsRoleFilter.value;
-
-        const filtered = allContacts.filter(c => {
-            const matchesText = c.nombre.toLowerCase().includes(textTerm) || 
-                                c.correo.toLowerCase().includes(textTerm) || 
-                                c.cargo.toLowerCase().includes(textTerm);
-            const matchesRole = roleTerm === "" || c.cargo === roleTerm;
-            return matchesText && matchesRole;
-        });
-
-        renderContacts(filtered);
-    }
-
-    contactsSearch.addEventListener('input', applyContactsFilter);
-    contactsRoleFilter.addEventListener('change', applyContactsFilter);
-
-    // ==========================================
-    // APLICATIVOS
-    // ==========================================
-    const appsModal = document.getElementById('appsModal');
-    const appsGrid = document.getElementById('appsGrid');
-    
-    document.getElementById('openAppsBtn').addEventListener('click', () => { 
-        appsModal.classList.add('open'); 
-        activeZIndex++; appsModal.style.zIndex = activeZIndex;
-    });
-    document.getElementById('closeAppsBtn').addEventListener('click', () => appsModal.classList.remove('open'));
-
-    const appLinks = [
-        { name: "GDPR", url: "https://sites.google.com/intelcia.com/papernestformacion/herramientas" },
-        { name: "Buscador Naturgy", url: "https://front-calculator.zapotek.adn.naturgy.com/" },
-        { name: "Buscador Total Energies", url: "https://papernest.typeform.com/to/Sa1YubJN?typeform-source=docs.google.com" },
-        { name: "Tarifario", url: "https://papernest.learnupon.com/enrollments/256734401" },
-        { name: "Teléfonos de contacto", url: "https://docs.google.com/presentation/d/13NnyEY5wXnCpzwX_KCHGfvm2vTz-yLka" },
-        { name: "Ejemplos Facturas", url: "https://docs.google.com/presentation/d/e/2PACX-1vQx_oQLVEfTzhUQM9HIF8zknrrpaLVxS53CzZfAbUuVqS2IyFe4T1BKNv7CsiA3TQtPgP3nSBTRwtJ2" },
-        { name: "Script interactivo BPO", url: "https://papernest.learnupon.com/enrollments/256794242" },
-        { name: "Confirmación correo", url: "https://www.verifyemailaddress.org/es/" },
-        { name: "Confirmación Iban", url: "https://www.ibancalculator.com/iban_validieren.html" },
-        { name: "Manual salesforce", url: "https://papernest.learnupon.com/enrollments/257470944" },
-        { name: "Mercado de energía", url: "https://docs.google.com/presentation/d/1OkmguRExhiPJSD9T_i0LoTjZtOYiFeGa" },
-        { name: "Cómo agendar Diabolocom", url: "https://papernest.learnupon.com/enrollments/257971007" },
-        { name: "Contrato Papernest", url: "https://docs.google.com/presentation/d/16zjdddzLNqidp8t_EtqszXNKVUFoMB_gHinpaaulj8s" },
-        { name: "TR Live (Diario)", url: "https://docs.google.com/spreadsheets/d/15g8rmG0Tfh1CXzn4RAe1jpen72Q5SjlGs7e1li941YU" },
-        { name: "Feedback mensual", url: "https://sites.google.com/intelcia.com/papernestformacion/como-vamos-papernest" },
-        { name: "Links de averias", url: "https://docs.google.com/spreadsheets/d/1jg1bV4GBVeA2Dm7RuBn5La7cWeUGVNZ8" },
-        { name: "Página Papernest", url: "https://www.papernest.es/compania-mas-barata/" },
-        { name: "Seguimiento ventas", url: "https://docs.google.com/presentation/d/1R4iKqIKEApWvJWaOnarqGDZVFczcUqii1-u3_pTdCo" },
-        { name: "Resolución objeciones", url: "https://docs.google.com/presentation/d/1UVXRxkzwPZPc_p4FMXgqmPMqV3W0eFgE" },
-        { name: "Matriz calidad", url: "https://docs.google.com/spreadsheets/d/1fSL4NQ2E3rkr8-RRa9GtbYobw7cNQHTWvr9LilPCmD8" }
-    ];
-
-    appLinks.forEach(app => {
-        appsGrid.innerHTML += `<a href="${app.url}" target="_blank" class="app-card"><span>${app.name}</span></a>`;
-    });
-
-    const spellModal = document.getElementById('spellModal'), spellInput = document.getElementById('spellInput'), spellOutput = document.getElementById('spellOutput'), spellStatus = document.getElementById('spellStatus');
-    document.getElementById('openSpellBtn').addEventListener('click', () => { spellModal.classList.add('open'); activeZIndex++; spellModal.style.zIndex = activeZIndex; spellInput.focus(); }); document.getElementById('closeSpellBtn').addEventListener('click', () => { spellModal.classList.remove('open'); });
-    function executeSpellCheck() { const text = spellInput.value.trim(); if (!text) return; spellStatus.innerText = 'Revisando...'; spellOutput.value = ''; if (typeof google !== 'undefined' && google.script && google.script.run) { google.script.run.withSuccessHandler(res => { spellOutput.value = res.text; spellStatus.innerText = res.label; }).withFailureHandler(err => { spellStatus.innerText = 'Error'; spellOutput.value = 'No se pudo contactar al servidor.'; }).correctSpelling(text); } else { spellOutput.value = "Entorno no detectado."; } }
-    document.getElementById('spellSubmitBtn').addEventListener('click', executeSpellCheck); spellInput.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); executeSpellCheck(); } });
-
-    const transModal = document.getElementById('transModal'), transInput = document.getElementById('transInput'), transOutput = document.getElementById('transOutput'), transStatus = document.getElementById('transStatus');
-    document.getElementById('openTransBtn').addEventListener('click', () => { transModal.classList.add('open'); activeZIndex++; transModal.style.zIndex = activeZIndex; transInput.focus(); }); document.getElementById('closeTransBtn').addEventListener('click', () => { transModal.classList.remove('open'); });
-    function executeTranslation() { const text = transInput.value.trim(); if (!text) return; transStatus.innerText = 'Traduciendo...'; transOutput.value = ''; if (typeof google !== 'undefined' && google.script && google.script.run) { google.script.run.withSuccessHandler(res => { transOutput.value = res.text; transStatus.innerText = res.label; }).withFailureHandler(err => { transStatus.innerText = 'Error'; transOutput.value = 'Fallo en servidor.'; }).translateText(text); } else { transOutput.value = "Entorno no detectado."; } }
-    document.getElementById('transSubmitBtn').addEventListener('click', executeTranslation); transInput.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); executeTranslation(); } });
-
-    const calcModal = document.getElementById('calcModal'); document.getElementById('openCalcBtn').addEventListener('click', () => { calcModal.classList.add('open'); activeZIndex++; calcModal.style.zIndex = activeZIndex; calcModal.focus(); }); document.getElementById('closeCalcBtn').addEventListener('click', () => { calcModal.classList.remove('open'); });
-    const calcDisplay = document.getElementById('calcDisplay'); let currentOperand = '0', previousOperand = '', operation = undefined, shouldResetScreen = false;
-    function updateDisplay() { if(currentOperand.length > 12) currentOperand = currentOperand.substring(0, 12); calcDisplay.innerText = currentOperand; } function appendNumber(number) { if (shouldResetScreen) { currentOperand = ''; shouldResetScreen = false; } if (number === '.' && currentOperand.includes('.')) return; if (currentOperand === '0' && number !== '.') { currentOperand = number; } else { currentOperand += number; } updateDisplay(); } function chooseOperation(op) { if (op === 'del') { if(shouldResetScreen) return; currentOperand = currentOperand.slice(0, -1); if(currentOperand === '') currentOperand = '0'; updateDisplay(); return; } if (currentOperand === '') return; if (previousOperand !== '') { compute(); } operation = op; previousOperand = currentOperand; shouldResetScreen = true; } function compute() { let computation; const prev = parseFloat(previousOperand), current = parseFloat(currentOperand); if (isNaN(prev) || isNaN(current)) return; switch (operation) { case '+': computation = prev + current; break; case '-': computation = prev - current; break; case '*': computation = prev * current; break; case '/': computation = current === 0 ? 'Error' : prev / current; break; default: return; } currentOperand = computation.toString(); operation = undefined; previousOperand = ''; shouldResetScreen = true; updateDisplay(); } function clearCalculator() { currentOperand = '0'; previousOperand = ''; operation = undefined; updateDisplay(); }
-    document.querySelectorAll('.calc-btn').forEach(btn => { btn.addEventListener('click', () => { calcModal.focus(); const action = btn.getAttribute('data-action'), val = btn.getAttribute('data-val'); if (action === 'num') appendNumber(val); if (action === 'op') chooseOperation(val); if (action === 'eq') compute(); if (action === 'clear') clearCalculator(); }); }); calcModal.addEventListener('keydown', (e) => { const key = e.key; const validKeys = ['0','1','2','3','4','5','6','7','8','9','.','+','-','*','/','Enter','=','Backspace','Delete','Escape']; if (validKeys.includes(key)) { e.preventDefault(); if (/[0-9\.]/.test(key)) appendNumber(key); if (['+', '-', '*', '/'].includes(key)) chooseOperation(key); if (key === 'Enter' || key === '=') compute(); if (key === 'Backspace') chooseOperation('del'); if (key === 'Delete') clearCalculator(); if (key === 'Escape') calcModal.classList.remove('open'); } });
-
-    let currentTimeZone = localStorage.getItem('avi_timezone') || 'America/Bogota', currentCountry = localStorage.getItem('avi_country') || 'Colombia';
-    const sidebarTime = document.getElementById('sidebarClock'), modalTimeDisplay = document.getElementById('modalTimeDisplay'), modalCountryDisplay = document.getElementById('modalCountryDisplay'), timezoneSelect = document.getElementById('timezoneSelect'), timeModal = document.getElementById('timeModal'); timezoneSelect.value = currentTimeZone; modalCountryDisplay.textContent = currentCountry;
-    function updateClocks() { const now = new Date(); try { sidebarTime.textContent = new Intl.DateTimeFormat('es-CO', { timeZone: currentTimeZone, hour: '2-digit', minute: '2-digit', hour12: false }).format(now); if (timeModal.classList.contains('open')) { modalTimeDisplay.textContent = new Intl.DateTimeFormat('es-CO', { timeZone: currentTimeZone, hour: '2-digit', minute: '2-digit', hour12: true }).format(now); } } catch(e) {} } setInterval(updateClocks, 1000); updateClocks();
-    timezoneSelect.addEventListener('change', function() { currentTimeZone = this.value; currentCountry = this.options[this.selectedIndex].getAttribute('data-country'); localStorage.setItem('avi_timezone', currentTimeZone); localStorage.setItem('avi_country', currentCountry); modalCountryDisplay.textContent = currentCountry; updateClocks(); }); document.getElementById('openTimeBtn').addEventListener('click', () => { timeModal.classList.add('open'); updateClocks(); }); document.getElementById('closeTimeBtn').addEventListener('click', () => timeModal.classList.remove('open')); document.getElementById('timeBackdrop').addEventListener('click', () => timeModal.classList.remove('open'));
-
-    const themeIconSvg = document.getElementById('themeIcon'); 
-    const sunPath = '<path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58c-.39-.39-1.03-.39-1.41 0-.39.39-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0 .39-.39.39-1.03 0-1.41L5.99 4.58zm12.37 12.37c-.39-.39-1.03-.39-1.41 0-.39.39-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0 .39-.39.39-1.03 0-1.41l-1.06-1.06zm1.06-10.96c.39-.39.39-1.03 0-1.41-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41.39.39 1.03.39 1.41 0l1.06-1.06zM7.05 18.36c.39-.39.39-1.03 0-1.41-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41.39.39 1.03.39 1.41 0l1.06-1.06z"/>'; 
-    const moonPath = '<path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-.46-.04-.92-.1-1.36-.98 1.37-2.58 2.26-4.4 2.26-3.03 0-5.5-2.47-5.5-5.5 0-1.82.89-3.42 2.26-4.4-.44-.06-.9-.1-1.36-.1z"/>';
-    
-    function toggleTheme() { 
-        document.body.classList.toggle('light-mode'); 
-        themeIconSvg.style.transform = 'rotate(180deg)'; 
-        setTimeout(() => { 
-            if (document.body.classList.contains('light-mode')) { 
-                themeIconSvg.innerHTML = moonPath; 
-            } else { 
-                themeIconSvg.innerHTML = sunPath; 
-            } 
-            themeIconSvg.style.transform = 'rotate(0deg)'; 
-        }, 150); 
-    }
-
-    const customInput = document.getElementById('customChatInput'), chatHistory = document.getElementById('chatHistory'), welcomeScreen = document.getElementById('welcome-screen');
-    let lastUserQuestion = '';
-
-    function addMessageToUI(text, isUser) { if (welcomeScreen && welcomeScreen.style.display !== 'none') { welcomeScreen.style.opacity = '0'; setTimeout(() => welcomeScreen.style.display = 'none', 400); } const loader = document.getElementById('typing-loader'); if (loader) loader.remove(); const msgDiv = document.createElement('div'); msgDiv.className = isUser ? 'message user-message' : 'message bot-message'; msgDiv.innerHTML = isUser ? `<div class="msg-text">${text}</div>` : `<span class="bot-label">AVI</span><div class="msg-text">${text}</div>`; chatHistory.appendChild(msgDiv); chatHistory.scrollTop = chatHistory.scrollHeight; }
-    function addChipsToUI(optionsArray) { const chipsContainer = document.createElement('div'); chipsContainer.className = 'chips-container'; optionsArray.forEach(opt => { const chipText = opt.text || opt.title || opt; const btn = document.createElement('button'); btn.className = 'chip-btn'; btn.innerText = chipText; btn.onclick = () => { chipsContainer.remove(); lastUserQuestion = chipText; addMessageToUI(chipText, true); addLoader(); const df = prepareDfMessengerForRequest(); if (df && typeof df.sendQuery === 'function') { df.sendQuery(chipText); } }; chipsContainer.appendChild(btn); }); chatHistory.appendChild(chipsContainer); chatHistory.scrollTop = chatHistory.scrollHeight; }
-    function addLoader() { const loaderDiv = document.createElement('div'); loaderDiv.id = 'typing-loader'; loaderDiv.className = 'message bot-message'; loaderDiv.innerHTML = `<span class="bot-label">AVI</span><div class="msg-text" style="color:var(--text-muted); font-style:italic;">Escribiendo...</div>`; chatHistory.appendChild(loaderDiv); chatHistory.scrollTop = chatHistory.scrollHeight; }
-    function normalizeBotFailureText(text) { return String(text || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/<[^>]*>/g, ' ').replace(/[¿?¡!.,;:()[\]{}"']/g, ' ').replace(/\s+/g, ' ').trim(); }
-    function isExactBotFailureText(text) { const normalized = normalizeBotFailureText(text); const phrases = ['lo siento estoy aprendiendo del tema', 'ups no he entendido a que te refieres', 'podrias repetirlo por favor', 'disculpa', 'decias', 'como', 'lo siento no tengo informacion sobre', 'solo puedo responder preguntas basadas en la informacion']; return !!normalized && phrases.some(item => normalized === normalizeBotFailureText(item)); }
-    function extractSessionPathFromDetail(value, visited) { if (value === null || value === undefined) return ''; if (!visited) visited = new WeakSet(); if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') { const text = String(value); const pathMatch = text.match(/projects\/[^ ]+\/sessions\/dfMessenger-[A-Za-z0-9-]+/i); if (pathMatch) return pathMatch[0]; const tokenMatch = text.match(/dfMessenger-[A-Za-z0-9-]+/i); return tokenMatch ? tokenMatch[0] : ''; } if (typeof value !== 'object') return ''; if (visited.has(value)) return ''; visited.add(value); if (Array.isArray(value)) { for (const item of value) { const result = extractSessionPathFromDetail(item, visited); if (result) return result; } return ''; } for (const key of Object.keys(value)) { const result = extractSessionPathFromDetail(value[key], visited); if (result) return result; } return ''; }
-    function registrarFallbackBotSiHaceFalta(question, responseText, eventDetail) { if (!question || !isExactBotFailureText(responseText)) return; if (!(typeof google !== 'undefined' && google.script && google.script.run)) return; google.script.run.registrarFallbackBotDesdeCliente({ pregunta: question, respuesta: responseText, correo: AVI_USER_EMAIL, sessionPath: extractSessionPathFromDetail(eventDetail) || AVI_SESSION_ID }); }
-    customInput.addEventListener('keypress', function (e) { if (e.key === 'Enter' && this.value.trim() !== '') { const text = this.value.trim(); lastUserQuestion = text; addMessageToUI(text, true); addLoader(); try { const df = prepareDfMessengerForRequest(); if (df && typeof df.sendQuery === 'function') { df.sendQuery(text); } else { throw new Error(""); } } catch (err) { const loader = document.getElementById('typing-loader'); if (loader) loader.remove(); addMessageToUI("Aún estoy cargando mis sistemas.", false); } this.value = ''; } });
-    window.addEventListener("df-response-received", function (event) { const loader = document.getElementById('typing-loader'); if (loader) loader.remove(); let fullTextResponse = ""; let chipsToRender = []; try { if (event.detail && event.detail.messages && Array.isArray(event.detail.messages)) { event.detail.messages.forEach(msg => { if (msg.text) { if (typeof msg.text === "string") { fullTextResponse += msg.text + "<br><br>"; } else if (Array.isArray(msg.text)) { fullTextResponse += msg.text.join("<br>") + "<br><br>"; } else if (msg.text.text) { fullTextResponse += msg.text.text.join("<br>") + "<br><br>"; } } else if (msg.type === "chips" && msg.options) { chipsToRender = chipsToRender.concat(msg.options); } else if (msg.payload && msg.payload.richContent) { msg.payload.richContent.forEach(itemArray => { itemArray.forEach(item => { if (item.type === 'chips' && item.options) { chipsToRender = chipsToRender.concat(item.options); } }); }); } }); } } catch (e) {} fullTextResponse = fullTextResponse.trim().replace(/(<br>)+$/, ''); if (fullTextResponse !== "") { addMessageToUI(fullTextResponse, false); const cleanTextForVoice = fullTextResponse.replace(/<[^>]*>?/gm, '').trim(); registrarFallbackBotSiHaceFalta(lastUserQuestion, cleanTextForVoice, event.detail); if (voiceEnabled) { setTimeout(function () { speakText(cleanTextForVoice); }, 250); } } if (chipsToRender.length > 0) { setTimeout(() => addChipsToUI(chipsToRender), 100); } });
-
-    var voiceEnabled = false; var synth = window.speechSynthesis; var preferredVoice = null; function loadVoices() { var voices = synth.getVoices(); if (!voices.length) return; preferredVoice = voices.find(v => v.name.toLowerCase().includes("google") && v.lang.startsWith("es")) || voices[0]; } if (speechSynthesis.onvoiceschanged !== undefined) { speechSynthesis.onvoiceschanged = loadVoices; } function toggleVoice() { var btn = document.getElementById("ttsToggle"); voiceEnabled = !voiceEnabled; loadVoices(); if (voiceEnabled) { btn.classList.add("active"); speakText("Voz activada."); } else { btn.classList.remove("active"); synth.cancel(); } } function speakText(text) { if (!voiceEnabled || !text) return; synth.cancel(); var utterance = new SpeechSynthesisUtterance(text); if (preferredVoice) utterance.voice = preferredVoice; utterance.lang = "es-CO"; synth.speak(utterance); }
-    (function () { var TARGET_URL = ""; var EXPECTED_USER = "adminavi"; var EXPECTED_PASS_SHA256 = "1b84aa8d7ee85cc873b4933e0dbf365ec99d5cff53b75d46ce6b26396ceaede3"; var openReportBtn = document.getElementById("openReportBtn"), reportModal = document.getElementById("reportModal"), closeReportBtn = document.getElementById("closeReportBtn"), reportUser = document.getElementById("reportUser"), reportPass = document.getElementById("reportPass"), reportStatus = document.getElementById("reportStatus"), reportOpenLink = document.getElementById("reportOpenLink"); function setStatus(message, kind) { reportStatus.className = "report-status" + (kind ? " show" : ""); reportStatus.textContent = message || ""; } function sha256Hex(text) { if (!window.crypto || !window.crypto.subtle) return Promise.resolve(""); var bytes = new TextEncoder().encode(String(text || "")); return window.crypto.subtle.digest("SHA-256", bytes).then(hashBuffer => Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, "0")).join("")); } openReportBtn.addEventListener("click", () => { reportModal.classList.add("open"); reportPass.value = ""; setStatus(""); setTimeout(() => reportUser.focus(), 50); }); closeReportBtn.addEventListener("click", () => reportModal.classList.remove("open")); document.getElementById("reportClearBtn").addEventListener("click", () => { reportUser.value = ""; reportPass.value = ""; setStatus(""); reportUser.focus(); }); document.getElementById("reportLoginForm").addEventListener("submit", function (event) { event.preventDefault(); var user = reportUser.value.trim().toLowerCase(), pass = reportPass.value.trim(); if (!user || !pass) return setStatus("Completa usuario y contraseña.", "error"); sha256Hex(pass).then(hash => { if (user !== EXPECTED_USER || hash !== EXPECTED_PASS_SHA256) return setStatus("Usuario o contraseña incorrectos.", "error"); reportOpenLink.href = TARGET_URL; reportOpenLink.classList.add("show"); setStatus("Acceso permitido. Haz clic abajo.", ""); }).catch(() => setStatus("Error de validación.", "error")); }); }());
   </script>
 </body>
 </html>
